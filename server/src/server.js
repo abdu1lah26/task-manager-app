@@ -5,6 +5,7 @@ import { Server } from 'socket.io';
 import dotenv from 'dotenv';
 import pool from './config/database.js';
 import authRoutes from './routes/auth.routes.js';
+import projectRoutes from './routes/projects.routes.js';
 
 dotenv.config();
 
@@ -46,6 +47,7 @@ app.get('/api/test-db', async (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/projects', projectRoutes);  
 
 // Socket.io connection
 io.on('connection', (socket) => {
