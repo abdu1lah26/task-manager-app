@@ -3,6 +3,7 @@ import { Toaster } from 'react-hot-toast';
 import { AuthProvider } from './context/AuthContext';
 import Projects from './pages/Projects';
 import ProjectDetail from './pages/ProjectDetail';
+import { SocketProvider } from './context/SocketContext';
 
 // Components
 import Login from './components/auth/Login';
@@ -20,7 +21,8 @@ function App() {
   return (
     <Router>
       <AuthProvider>
-        <div className="App">
+        <SocketProvider>
+          <div className="App">
           <Toaster
             position="top-right"
             toastOptions={{
@@ -81,7 +83,8 @@ function App() {
               {/* Catch all */}
               <Route path="*" element={<Navigate to="/" />} />
             </Routes>
-        </div>
+          </div>
+        </SocketProvider>
       </AuthProvider>
     </Router>
   );

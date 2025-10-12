@@ -2,18 +2,45 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../utils/api';
 import toast from 'react-hot-toast';
+import TaskBoard from '../components/tasks/TaskBoard';
+import { useSocket } from '../hooks/useSocket';
+import ConnectionStatus from '../components/common/ConnectionStatus';
 
 const ProjectDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const [project, setProject] = useState(null);
+  const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddMember, setShowAddMember] = useState(false);
+  const [showCreateTask, setShowCreateTask] = useState(false);
   const [memberEmail, setMemberEmail] = useState('');
   const [adding, setAdding] = useState(false);
 
+  // Move useSocket hook to top level
+  const {
+    socket,
+    isConnected,
+    joinProject,
+    leaveProject,
+    emitTaskCreated,
+    emitTaskUpdated,
+    emitTaskDeleted,
+  } = useSocket();
+
+  // Task form state
+  const [taskForm, setTaskForm] = useState({
+    title: '',
+    description: '',
+    priority: 'medium',
+    assignedTo: '',
+    dueDate: ''
+  });
+  const [creating, setCreating] = useState(false);
+
   useEffect(() => {
     fetchProject();
+    fetchTasks();
   }, [id]);
 
   const fetchProject = async () => {
@@ -25,6 +52,119 @@ const ProjectDetail = () => {
       console.error('Fetch project error:', err);
       toast.error('Failed to load project');
       navigate('/projects');
+    }
+  };
+
+  const fetchTasks = async () => {
+    try {
+      const response = await api.get(`/tasks/project/${id}`);
+      setTasks(response.data.tasks);
+    } catch (err) {
+      console.error('Fetch tasks error:', err);
+      toast.error('Failed to load tasks');
+    }
+  };
+
+  // Join project room on mount
+useEffect(() => {
+  if (id && isConnected) {
+    joinProject(id);
+    
+    return () => {
+      leaveProject(id);
+    };
+  }
+}, [id, isConnected]);
+
+// Listen for real-time updates
+useEffect(() => {
+  if (!socket) return;
+
+  // Task created by another user
+  socket.on('task-created', (task) => {
+    setTasks((prev) => [task, ...prev]);
+    toast.success(`New task created: ${task.title}`);
+  });
+
+  // Task updated by another user
+  socket.on('task-updated', (updatedTask) => {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === updatedTask.id ? updatedTask : t))
+    );
+  });
+
+// Task deleted by another user
+socket.on('task-deleted', (taskId) => {
+  setTasks((prev) => prev.filter((t) => t.id !== taskId));
+  toast.success('Task deleted');
+});
+
+  // Task status changed by another user
+  socket.on('task-status-changed', ({ taskId, newStatus }) => {
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+    );
+  });
+
+  // Cleanup
+  return () => {
+    socket.off('task-created');
+    socket.off('task-updated');
+    socket.off('task-deleted');
+    socket.off('task-status-changed');
+  };
+}, [socket]);
+
+  const handleCreateTask = async (e) => {
+    e.preventDefault();
+
+    if (!taskForm.title.trim()) {
+      toast.error('Task title is required');
+      return;
+    }
+
+    setCreating(true);
+
+    try {
+      const response = await api.post(`/tasks/project/${id}`, taskForm);
+      setTasks([response.data.task, ...tasks]);
+      emitTaskCreated(id, response.data.task);
+      toast.success('Task created!');
+      setShowCreateTask(false);
+      setTaskForm({
+        title: '',
+        description: '',
+        priority: 'medium',
+        assignedTo: '',
+        dueDate: ''
+      });
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to create task');
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleTaskUpdate = async (taskId, updates) => {
+    try {
+      const response = await api.put(`/tasks/${taskId}`, updates);
+      setTasks(tasks.map(t => t.id === taskId ? response.data.task : t));
+      emitTaskUpdated(id, response.data.task);
+      toast.success('Task updated!');
+      fetchTasks(); // Refresh to get updated data
+    } catch (err) {
+      toast.error('Failed to update task');
+    }
+  };
+
+  const handleTaskDelete = async (taskId) => {
+    try {
+      await api.delete(`/tasks/${taskId}`);
+      setTasks(tasks.filter(t => t.id !== taskId));
+      emitTaskDeleted(id, taskId);
+      toast.success('Task deleted');
+    } catch (err) {
+      toast.error('Failed to delete task');
     }
   };
 
@@ -43,7 +183,7 @@ const ProjectDetail = () => {
       toast.success('Member added successfully!');
       setMemberEmail('');
       setShowAddMember(false);
-      fetchProject(); // Refresh project data
+      fetchProject();
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to add member');
     } finally {
@@ -81,6 +221,7 @@ const ProjectDetail = () => {
         <button onClick={() => navigate('/projects')} className="btn-back">
           ← Back to Projects
         </button>
+        <ConnectionStatus />
       </div>
 
       {/* Project Info */}
@@ -116,6 +257,25 @@ const ProjectDetail = () => {
           <p>Completed</p>
         </div>
       </div>
+
+      {/* Tasks Section */}
+      <div className="tasks-section-header">
+        <h2>Task Board</h2>
+        <button
+          onClick={() => setShowCreateTask(true)}
+          className="btn-primary"
+        >
+          + Create Task
+        </button>
+      </div>
+
+      <TaskBoard
+        tasks={tasks}
+        projectId={id}
+        projectMembers={project.members}
+        onTaskUpdate={handleTaskUpdate}
+        onTaskDelete={handleTaskDelete}
+      />
 
       {/* Members Section */}
       <div className="members-section">
@@ -163,11 +323,116 @@ const ProjectDetail = () => {
         </div>
       </div>
 
-      {/* Tasks Section (Placeholder) */}
-      <div className="tasks-section">
-        <h2>Tasks</h2>
-        <p className="empty-message">Task board coming soon! 🚀</p>
-      </div>
+      {/* Create Task Modal */}
+      {showCreateTask && (
+        <div className="modal-overlay" onClick={() => setShowCreateTask(false)}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>Create New Task</h2>
+              <button
+                className="modal-close"
+                onClick={() => setShowCreateTask(false)}
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateTask}>
+              <div className="form-group">
+                <label htmlFor="title">Task Title *</label>
+                <input
+                  type="text"
+                  id="title"
+                  value={taskForm.title}
+                  onChange={(e) =>
+                    setTaskForm({ ...taskForm, title: e.target.value })
+                  }
+                  placeholder="Enter task title"
+                  required
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="description">Description</label>
+                <textarea
+                  id="description"
+                  value={taskForm.description}
+                  onChange={(e) =>
+                    setTaskForm({ ...taskForm, description: e.target.value })
+                  }
+                  placeholder="Enter task description (optional)"
+                  rows="4"
+                />
+              </div>
+
+              <div className="form-row">
+                <div className="form-group">
+                  <label htmlFor="priority">Priority</label>
+                  <select
+                    id="priority"
+                    value={taskForm.priority}
+                    onChange={(e) =>
+                      setTaskForm({ ...taskForm, priority: e.target.value })
+                    }
+                  >
+                    <option value="low">Low</option>
+                    <option value="medium">Medium</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="dueDate">Due Date</label>
+                  <input
+                    type="date"
+                    id="dueDate"
+                    value={taskForm.dueDate}
+                    onChange={(e) =>
+                      setTaskForm({ ...taskForm, dueDate: e.target.value })
+                    }
+                  />
+                </div>
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="assignedTo">Assign To</label>
+                <select
+                  id="assignedTo"
+                  value={taskForm.assignedTo}
+                  onChange={(e) =>
+                    setTaskForm({ ...taskForm, assignedTo: e.target.value })
+                  }
+                >
+                  <option value="">Unassigned</option>
+                  {project.members && project.members.map((member) => (
+                    <option key={member.id} value={member.id}>
+                      {member.full_name || member.username}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="modal-actions">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateTask(false)}
+                  className="btn-secondary"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="btn-primary"
+                  disabled={creating}
+                >
+                  {creating ? 'Creating...' : 'Create Task'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Add Member Modal */}
       {showAddMember && (

@@ -6,6 +6,8 @@ import dotenv from 'dotenv';
 import pool from './config/database.js';
 import authRoutes from './routes/auth.routes.js';
 import projectRoutes from './routes/projects.routes.js';
+import taskRoutes from './routes/tasks.routes.js';
+import { handleSocketConnection } from './socket/socketHandler.js';
 
 dotenv.config();
 
@@ -47,16 +49,11 @@ app.get('/api/test-db', async (req, res) => {
 
 // Routes
 app.use('/api/auth', authRoutes);
-app.use('/api/projects', projectRoutes);  
+app.use('/api/projects', projectRoutes);
+app.use('/api/tasks', taskRoutes);
 
-// Socket.io connection
-io.on('connection', (socket) => {
-  console.log('✅ New client connected:', socket.id);
-  
-  socket.on('disconnect', () => {
-    console.log('❌ Client disconnected:', socket.id);
-  });
-});
+// Socket.io connection with handler
+handleSocketConnection(io);
 
 const PORT = process.env.PORT || 5000;
 
