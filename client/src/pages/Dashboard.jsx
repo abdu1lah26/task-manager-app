@@ -34,16 +34,6 @@ const Dashboard = () => {
                 Go to Projects
             </button>
         </div>
-
-      <div className="info-card">
-        <h3>What's Next?</h3>
-        <ul>
-          <li>✅ Authentication Complete</li>
-          <li>📋 Projects Management (Coming Soon)</li>
-          <li>✅ Task Board (Coming Soon)</li>
-          <li>💬 Real-time Updates (Coming Soon)</li>
-        </ul>
-      </div>
     </div>
   );
 };
