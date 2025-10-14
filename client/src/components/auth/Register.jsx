@@ -1,19 +1,19 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import toast from 'react-hot-toast';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 const Register = () => {
   const navigate = useNavigate();
   const { register } = useAuth();
 
   const [formData, setFormData] = useState({
-    username: '',
-    email: '',
-    password: '',
-    fullName: '',
+    username: "",
+    email: "",
+    password: "",
+    fullName: "",
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -24,29 +24,29 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setError(""); // Clear previous errors
+
     // Basic validation
     if (!formData.username || !formData.email || !formData.password) {
-      toast.error('Please fill in all required fields');
+      setError("Please fill in all required fields");
       return;
     }
 
     if (formData.password.length < 6) {
-      toast.error('Password must be at least 6 characters');
+      setError("Password must be at least 6 characters");
       return;
     }
 
     setLoading(true);
-    
+
     const result = await register(formData);
-    
+
     setLoading(false);
 
     if (result.success) {
-      toast.success('Registration successful!');
-      navigate('/dashboard');
+      navigate("/dashboard");
     } else {
-      toast.error(result.message);
+      setError(result.message || "Registration failed. Please try again.");
     }
   };
 
@@ -55,6 +55,8 @@ const Register = () => {
       <div className="register-card">
         <h2>Create Account</h2>
         <p className="subtitle">Join us to start managing your tasks</p>
+
+        {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -109,7 +111,7 @@ const Register = () => {
           </div>
 
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Creating Account...' : 'Register'}
+            {loading ? "Creating Account..." : "Register"}
           </button>
         </form>
 

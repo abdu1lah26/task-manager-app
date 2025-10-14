@@ -1,11 +1,11 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import api from "../utils/api";
-import toast from "react-hot-toast";
 import { useAuth } from "../hooks/useAuth";
 
 const Projects = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { logout } = useAuth();
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -15,10 +15,18 @@ const Projects = () => {
     description: "",
   });
   const [creating, setCreating] = useState(false);
+  const [error, setError] = useState("");
 
   // Fetch projects on mount
   useEffect(() => {
     fetchProjects();
+
+    // Check if we should open the create modal
+    if (location.state?.openCreateModal) {
+      setShowModal(true);
+      // Clear the state to prevent reopening on refresh
+      navigate(location.pathname, { replace: true, state: {} });
+    }
   }, []);
 
   const fetchProjects = async () => {
@@ -28,16 +36,16 @@ const Projects = () => {
       setLoading(false);
     } catch (err) {
       console.error("Fetch projects error:", err);
-      toast.error("Failed to load projects");
       setLoading(false);
     }
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(""); // Clear previous errors
 
     if (!formData.name.trim()) {
-      toast.error("Project name is required");
+      setError("Project name is required");
       return;
     }
 
@@ -45,12 +53,13 @@ const Projects = () => {
 
     try {
       const response = await api.post("/projects", formData);
-      toast.success("Project created successfully!");
       setProjects([response.data.project, ...projects]);
       setShowModal(false);
       setFormData({ name: "", description: "" });
+      setError(""); // Clear error on success
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to create project");
+      console.error("Failed to create project:", err);
+      setError("Failed to create project. Please try again.");
     } finally {
       setCreating(false);
     }
@@ -63,10 +72,9 @@ const Projects = () => {
 
     try {
       await api.delete(`/projects/${projectId}`);
-      toast.success("Project deleted successfully");
       setProjects(projects.filter((p) => p.id !== projectId));
     } catch (err) {
-      toast.error(err.response?.data?.message || "Failed to delete project");
+      console.error("Failed to delete project:", err);
     }
   };
 
@@ -90,21 +98,54 @@ const Projects = () => {
     <div className="projects-container">
       {/* Header */}
       <div className="projects-header">
-        <div>
-          <h1>My Projects</h1>
-          <p className="subtitle">{projects.length} project(s) found</p>
+        <div className="header-left">
+          <h1>Projects</h1>
+          <p className="projects-subtitle">
+            {projects.length} {projects.length === 1 ? "project" : "projects"}
+          </p>
         </div>
         <div className="header-actions">
           <button
             onClick={() => navigate("/dashboard")}
             className="btn-secondary"
           >
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <rect x="3" y="3" width="7" height="7" />
+              <rect x="14" y="3" width="7" height="7" />
+              <rect x="14" y="14" width="7" height="7" />
+              <rect x="3" y="14" width="7" height="7" />
+            </svg>
             Dashboard
           </button>
           <button onClick={() => setShowModal(true)} className="btn-primary">
-            + New Project
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            New Project
           </button>
-          <button onClick={handleLogout} className="btn-secondary">
+          <button onClick={handleLogout} className="btn-logout-alt">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9" />
+            </svg>
             Logout
           </button>
         </div>
@@ -113,10 +154,33 @@ const Projects = () => {
       {/* Projects Grid */}
       {projects.length === 0 ? (
         <div className="empty-state">
+          <div className="empty-icon">
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <path d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+          </div>
           <h2>No projects yet</h2>
-          <p>Create your first project to get started!</p>
+          <p>
+            Get started by creating your first project to organize your tasks
+          </p>
           <button onClick={() => setShowModal(true)} className="btn-primary">
-            Create Project
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+            >
+              <line x1="12" y1="5" x2="12" y2="19" />
+              <line x1="5" y1="12" x2="19" y2="12" />
+            </svg>
+            Create Your First Project
           </button>
         </div>
       ) : (
@@ -134,35 +198,59 @@ const Projects = () => {
                 {project.description || "No description provided"}
               </p>
 
-              <div className="project-stats">
-                <div className="stat">
-                  <span className="stat-label">Members</span>
-                  <span className="stat-value">
-                    {project.member_count || 0}
-                  </span>
+              <div className="project-meta">
+                <div className="meta-item">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75" />
+                  </svg>
+                  <span>{project.member_count || 0}</span>
                 </div>
-                <div className="stat">
-                  <span className="stat-label">Tasks</span>
-                  <span className="stat-value">{project.task_count || 0}</span>
+                <div className="meta-item">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                  >
+                    <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                  </svg>
+                  <span>{project.task_count || 0}</span>
                 </div>
+                <div className="meta-owner">By {project.owner_name}</div>
               </div>
 
               <div className="project-footer">
-                <span className="owner">By {project.owner_name}</span>
-                <div className="project-actions">
-                  <button
-                    onClick={() => navigate(`/projects/${project.id}`)}
-                    className="btn-small btn-primary"
+                <button
+                  onClick={() => navigate(`/projects/${project.id}`)}
+                  className="btn-view"
+                >
+                  View Details →
+                </button>
+                <button
+                  onClick={() => handleDelete(project.id)}
+                  className="btn-delete"
+                  title="Delete project"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
                   >
-                    View
-                  </button>
-                  <button
-                    onClick={() => handleDelete(project.id)}
-                    className="btn-small btn-danger"
-                  >
-                    Delete
-                  </button>
-                </div>
+                    <polyline points="3 6 5 6 21 6" />
+                    <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+                  </svg>
+                </button>
               </div>
             </div>
           ))}
@@ -182,6 +270,8 @@ const Projects = () => {
                 ×
               </button>
             </div>
+
+            {error && <div className="error-message">{error}</div>}
 
             <form onSubmit={handleSubmit}>
               <div className="form-group">

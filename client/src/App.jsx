@@ -1,21 +1,25 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
-import { Toaster } from 'react-hot-toast';
-import { AuthProvider } from './context/AuthContext';
-import Projects from './pages/Projects';
-import ProjectDetail from './pages/ProjectDetail';
-import { SocketProvider } from './context/SocketContext';
+import {
+  BrowserRouter as Router,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext";
+import Projects from "./pages/Projects";
+import ProjectDetail from "./pages/ProjectDetail";
+import { SocketProvider } from "./context/SocketContext";
 
 // Components
-import Login from './components/auth/Login';
-import Register from './components/auth/Register';
-import ProtectedRoute from './components/auth/ProtectedRoute';
+import Login from "./components/auth/Login";
+import Register from "./components/auth/Register";
+import ProtectedRoute from "./components/auth/ProtectedRoute";
 
 // Pages
-import Home from './pages/Home';
-import Dashboard from './pages/Dashboard';
+import Home from "./pages/Home";
+import Dashboard from "./pages/Dashboard";
 
 // Styles
-import './App.css';
+import "./App.css";
 
 function App() {
   return (
@@ -23,32 +27,7 @@ function App() {
       <AuthProvider>
         <SocketProvider>
           <div className="App">
-          <Toaster
-            position="top-right"
-            toastOptions={{
-              duration: 3000,
-              style: {
-                background: '#363636',
-                color: '#fff',
-              },
-              success: {
-                duration: 3000,
-                iconTheme: {
-                  primary: '#4ade80',
-                  secondary: '#fff',
-                },
-              },
-              error: {
-                duration: 4000,
-                iconTheme: {
-                  primary: '#ef4444',
-                  secondary: '#fff',
-                },
-              },
-            }}
-          />
-
-          <Routes>
+            <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Home />} />
               <Route path="/login" element={<Login />} />

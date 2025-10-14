@@ -1,19 +1,25 @@
-import { useState, useEffect } from 'react';
-import api from '../../utils/api';
-import toast from 'react-hot-toast';
-import { useSocket } from '../../hooks/useSocket';
+import { useState, useEffect } from "react";
+import api from "../../utils/api";
+import { useSocket } from "../../hooks/useSocket";
 
-const TaskModal = ({ task, projectId, projectMembers, onClose, onUpdate, onDelete }) => {
+const TaskModal = ({
+  task,
+  projectId,
+  projectMembers,
+  onClose,
+  onUpdate,
+  onDelete,
+}) => {
   const [isEditing, setIsEditing] = useState(false);
   const [formData, setFormData] = useState({
     title: task.title,
-    description: task.description || '',
+    description: task.description || "",
     priority: task.priority,
-    assignedTo: task.assigned_to || '',
-    dueDate: task.due_date ? task.due_date.split('T')[0] : ''
+    assignedTo: task.assigned_to || "",
+    dueDate: task.due_date ? task.due_date.split("T")[0] : "",
   });
   const [comments, setComments] = useState([]);
-  const [newComment, setNewComment] = useState('');
+  const [newComment, setNewComment] = useState("");
   const [loading, setLoading] = useState(false);
   const { socket, emitCommentAdded, emitCommentDeleted } = useSocket();
 
@@ -25,21 +31,21 @@ const TaskModal = ({ task, projectId, projectMembers, onClose, onUpdate, onDelet
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('comment-added', ({ taskId, comment }) => {
+    socket.on("comment-added", ({ taskId, comment }) => {
       if (taskId === task.id) {
         setComments((prev) => [...prev, comment]);
       }
     });
 
-    socket.on('comment-deleted', ({ taskId, commentId }) => {
+    socket.on("comment-deleted", ({ taskId, commentId }) => {
       if (taskId === task.id) {
         setComments((prev) => prev.filter((c) => c.id !== commentId));
       }
     });
 
     return () => {
-      socket.off('comment-added');
-      socket.off('comment-deleted');
+      socket.off("comment-added");
+      socket.off("comment-deleted");
     };
   }, [socket, task.id]);
 
@@ -48,7 +54,7 @@ const TaskModal = ({ task, projectId, projectMembers, onClose, onUpdate, onDelet
       const response = await api.get(`/tasks/${task.id}`);
       setComments(response.data.task.comments || []);
     } catch (err) {
-      console.error('Fetch task details error:', err);
+      console.error("Fetch task details error:", err);
     }
   };
 
@@ -56,17 +62,16 @@ const TaskModal = ({ task, projectId, projectMembers, onClose, onUpdate, onDelet
     setLoading(true);
     try {
       await onUpdate(task.id, formData);
-      toast.success('Task updated!');
       setIsEditing(false);
     } catch (err) {
-      toast.error('Failed to update task');
+      console.error("Failed to update task:", err);
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async () => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
+    if (window.confirm("Are you sure you want to delete this task?")) {
       await onDelete(task.id);
       onClose();
     }
@@ -78,37 +83,40 @@ const TaskModal = ({ task, projectId, projectMembers, onClose, onUpdate, onDelet
 
     try {
       const response = await api.post(`/tasks/${task.id}/comments`, {
-        content: newComment
+        content: newComment,
       });
       setComments([...comments, response.data.comment]);
       emitCommentAdded(projectId, task.id, response.data.comment);
-      setNewComment('');
-      toast.success('Comment added!');
+      setNewComment("");
     } catch (err) {
-      toast.error('Failed to add comment');
+      console.error("Failed to add comment:", err);
     }
   };
 
   const handleDeleteComment = async (commentId) => {
-    if (!window.confirm('Delete this comment?')) return;
+    if (!window.confirm("Delete this comment?")) return;
 
     try {
       await api.delete(`/tasks/comments/${commentId}`);
-      setComments(comments.filter(c => c.id !== commentId));
+      setComments(comments.filter((c) => c.id !== commentId));
       emitCommentDeleted(projectId, task.id, commentId);
-      toast.success('Comment deleted');
     } catch (err) {
-      toast.error('Failed to delete comment');
+      console.error("Failed to delete comment:", err);
     }
   };
 
   return (
     <div className="modal-overlay" onClick={onClose}>
-      <div className="modal-content task-modal" onClick={(e) => e.stopPropagation()}>
+      <div
+        className="modal-content task-modal"
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
         <div className="modal-header">
           <h2>Task Details</h2>
-          <button className="modal-close" onClick={onClose}>×</button>
+          <button className="modal-close" onClick={onClose}>
+            ×
+          </button>
         </div>
 
         {/* Content */}
@@ -121,7 +129,9 @@ const TaskModal = ({ task, projectId, projectMembers, onClose, onUpdate, onDelet
                 <input
                   type="text"
                   value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, title: e.target.value })
+                  }
                 />
               </div>
 
@@ -129,7 +139,9 @@ const TaskModal = ({ task, projectId, projectMembers, onClose, onUpdate, onDelet
                 <label>Description</label>
                 <textarea
                   value={formData.description}
-                  onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, description: e.target.value })
+                  }
                   rows="4"
                 />
               </div>
@@ -139,7 +151,9 @@ const TaskModal = ({ task, projectId, projectMembers, onClose, onUpdate, onDelet
                   <label>Priority</label>
                   <select
                     value={formData.priority}
-                    onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, priority: e.target.value })
+                    }
                   >
                     <option value="low">Low</option>
                     <option value="medium">Medium</option>
@@ -153,7 +167,9 @@ const TaskModal = ({ task, projectId, projectMembers, onClose, onUpdate, onDelet
                   <input
                     type="date"
                     value={formData.dueDate}
-                    onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, dueDate: e.target.value })
+                    }
                   />
                 </div>
               </div>
@@ -162,23 +178,33 @@ const TaskModal = ({ task, projectId, projectMembers, onClose, onUpdate, onDelet
                 <label>Assign To</label>
                 <select
                   value={formData.assignedTo}
-                  onChange={(e) => setFormData({ ...formData, assignedTo: e.target.value })}
+                  onChange={(e) =>
+                    setFormData({ ...formData, assignedTo: e.target.value })
+                  }
                 >
                   <option value="">Unassigned</option>
-                  {projectMembers && projectMembers.map((member) => (
-                    <option key={member.id} value={member.id}>
-                      {member.full_name || member.username}
-                    </option>
-                  ))}
+                  {projectMembers &&
+                    projectMembers.map((member) => (
+                      <option key={member.id} value={member.id}>
+                        {member.full_name || member.username}
+                      </option>
+                    ))}
                 </select>
               </div>
 
               <div className="modal-actions">
-                <button onClick={() => setIsEditing(false)} className="btn-secondary">
+                <button
+                  onClick={() => setIsEditing(false)}
+                  className="btn-secondary"
+                >
                   Cancel
                 </button>
-                <button onClick={handleUpdate} className="btn-primary" disabled={loading}>
-                  {loading ? 'Saving...' : 'Save Changes'}
+                <button
+                  onClick={handleUpdate}
+                  className="btn-primary"
+                  disabled={loading}
+                >
+                  {loading ? "Saving..." : "Save Changes"}
                 </button>
               </div>
             </div>
@@ -192,7 +218,7 @@ const TaskModal = ({ task, projectId, projectMembers, onClose, onUpdate, onDelet
                     {task.priority}
                   </span>
                   <span className={`status-badge status-${task.status}`}>
-                    {task.status.replace('_', ' ')}
+                    {task.status.replace("_", " ")}
                   </span>
                 </div>
               </div>
@@ -213,25 +239,32 @@ const TaskModal = ({ task, projectId, projectMembers, onClose, onUpdate, onDelet
                 <div className="detail-item">
                   <span className="detail-label">Assigned to</span>
                   <span className="detail-value">
-                    {task.assigned_to_name || 'Unassigned'}
+                    {task.assigned_to_name || "Unassigned"}
                   </span>
                 </div>
 
                 <div className="detail-item">
                   <span className="detail-label">Due date</span>
                   <span className="detail-value">
-                    {task.due_date ? new Date(task.due_date).toLocaleDateString() : 'No due date'}
+                    {task.due_date
+                      ? new Date(task.due_date).toLocaleDateString()
+                      : "No due date"}
                   </span>
                 </div>
 
                 <div className="detail-item">
                   <span className="detail-label">Status</span>
-                  <span className="detail-value">{task.status.replace('_', ' ')}</span>
+                  <span className="detail-value">
+                    {task.status.replace("_", " ")}
+                  </span>
                 </div>
               </div>
 
               <div className="task-actions">
-                <button onClick={() => setIsEditing(true)} className="btn-primary">
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="btn-primary"
+                >
                   Edit Task
                 </button>
                 <button onClick={handleDelete} className="btn-danger">
@@ -269,7 +302,9 @@ const TaskModal = ({ task, projectId, projectMembers, onClose, onUpdate, onDelet
                           {comment.username.charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <strong>{comment.full_name || comment.username}</strong>
+                          <strong>
+                            {comment.full_name || comment.username}
+                          </strong>
                           <span className="comment-time">
                             {new Date(comment.created_at).toLocaleDateString()}
                           </span>

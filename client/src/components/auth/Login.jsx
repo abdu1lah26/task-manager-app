@@ -1,17 +1,17 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { useAuth } from '../../hooks/useAuth';
-import toast from 'react-hot-toast';
+import { useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../../hooks/useAuth";
 
 const Login = () => {
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const [formData, setFormData] = useState({
-    email: '',
-    password: '',
+    email: "",
+    password: "",
   });
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleChange = (e) => {
     setFormData({
@@ -22,23 +22,23 @@ const Login = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setError(""); // Clear previous errors
+
     if (!formData.email || !formData.password) {
-      toast.error('Please fill in all fields');
+      setError("Please fill in all fields");
       return;
     }
 
     setLoading(true);
-    
+
     const result = await login(formData);
-    
+
     setLoading(false);
 
     if (result.success) {
-      toast.success('Login successful!');
-      navigate('/dashboard');
+      navigate("/dashboard");
     } else {
-      toast.error(result.message);
+      setError(result.message || "Login failed. Please try again.");
     }
   };
 
@@ -47,6 +47,8 @@ const Login = () => {
       <div className="login-card">
         <h2>Welcome Back</h2>
         <p className="subtitle">Login to continue to your dashboard</p>
+
+        {error && <div className="error-message">{error}</div>}
 
         <form onSubmit={handleSubmit}>
           <div className="form-group">
@@ -76,7 +78,7 @@ const Login = () => {
           </div>
 
           <button type="submit" className="btn-primary" disabled={loading}>
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? "Logging in..." : "Login"}
           </button>
         </form>
 
