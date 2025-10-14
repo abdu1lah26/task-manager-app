@@ -1,12 +1,10 @@
 import pool from '../config/database.js';
 
-// Get all tasks for a project
 export const getProjectTasks = async (req, res) => {
   try {
     const { projectId } = req.params;
     const userId = req.user.userId;
 
-    // Check if user has access to this project
     const accessCheck = await pool.query(
       `SELECT * FROM projects p
        LEFT JOIN project_members pm ON p.id = pm.project_id
@@ -21,7 +19,6 @@ export const getProjectTasks = async (req, res) => {
       });
     }
 
-    // Get all tasks with assignee info
     const result = await pool.query(
       `SELECT t.*, 
         u1.username as created_by_name,
@@ -48,13 +45,11 @@ export const getProjectTasks = async (req, res) => {
   }
 };
 
-// Get single task by ID
 export const getTaskById = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
 
-    // Get task with access check
     const result = await pool.query(
       `SELECT t.*, 
         u1.username as created_by_name,
@@ -77,7 +72,6 @@ export const getTaskById = async (req, res) => {
       });
     }
 
-    // Get comments for this task
     const comments = await pool.query(
       `SELECT c.*, u.username, u.full_name, u.email
        FROM comments c
@@ -103,7 +97,6 @@ export const getTaskById = async (req, res) => {
   }
 };
 
-// Create new task
 export const createTask = async (req, res) => {
   try {
     const { projectId } = req.params;
@@ -117,7 +110,6 @@ export const createTask = async (req, res) => {
       });
     }
 
-    // Check project access
     const accessCheck = await pool.query(
       `SELECT * FROM projects p
        LEFT JOIN project_members pm ON p.id = pm.project_id
@@ -132,7 +124,6 @@ export const createTask = async (req, res) => {
       });
     }
 
-    // Create task
     const result = await pool.query(
       `INSERT INTO tasks (title, description, project_id, created_by, assigned_to, priority, due_date)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -142,7 +133,6 @@ export const createTask = async (req, res) => {
 
     const task = result.rows[0];
 
-    // Get created task with user info
     const taskWithInfo = await pool.query(
       `SELECT t.*, 
         u1.username as created_by_name,
@@ -168,14 +158,12 @@ export const createTask = async (req, res) => {
   }
 };
 
-// Update task
 export const updateTask = async (req, res) => {
   try {
     const { id } = req.params;
     const { title, description, status, priority, assignedTo, dueDate } = req.body;
     const userId = req.user.userId;
 
-    // Check access
     const accessCheck = await pool.query(
       `SELECT t.* FROM tasks t
        JOIN projects p ON t.project_id = p.id
@@ -205,7 +193,6 @@ export const updateTask = async (req, res) => {
       [title, description, status, priority, assignedTo, dueDate, id]
     );
 
-    // Get updated task with user info
     const taskWithInfo = await pool.query(
       `SELECT t.*, 
         u1.username as created_by_name,
@@ -231,7 +218,6 @@ export const updateTask = async (req, res) => {
   }
 };
 
-// Update task status (for drag & drop)
 export const updateTaskStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -245,7 +231,6 @@ export const updateTaskStatus = async (req, res) => {
       });
     }
 
-    // Check access
     const accessCheck = await pool.query(
       `SELECT t.* FROM tasks t
        JOIN projects p ON t.project_id = p.id
@@ -279,13 +264,11 @@ export const updateTaskStatus = async (req, res) => {
   }
 };
 
-// Delete task
 export const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
     const userId = req.user.userId;
 
-    // Check if user is project owner or task creator
     const accessCheck = await pool.query(
       `SELECT t.* FROM tasks t
        JOIN projects p ON t.project_id = p.id
@@ -315,7 +298,6 @@ export const deleteTask = async (req, res) => {
   }
 };
 
-// Add comment to task
 export const addComment = async (req, res) => {
   try {
     const { taskId } = req.params;
@@ -329,7 +311,6 @@ export const addComment = async (req, res) => {
       });
     }
 
-    // Check access to task
     const accessCheck = await pool.query(
       `SELECT t.* FROM tasks t
        JOIN projects p ON t.project_id = p.id
@@ -345,7 +326,6 @@ export const addComment = async (req, res) => {
       });
     }
 
-    // Add comment
     const result = await pool.query(
       `INSERT INTO comments (task_id, user_id, content)
        VALUES ($1, $2, $3)
@@ -353,7 +333,6 @@ export const addComment = async (req, res) => {
       [taskId, userId, content]
     );
 
-    // Get comment with user info
     const commentWithInfo = await pool.query(
       `SELECT c.*, u.username, u.full_name, u.email
        FROM comments c
@@ -376,13 +355,11 @@ export const addComment = async (req, res) => {
   }
 };
 
-// Delete comment
 export const deleteComment = async (req, res) => {
   try {
     const { commentId } = req.params;
     const userId = req.user.userId;
 
-    // Check if user owns the comment
     const ownerCheck = await pool.query(
       'SELECT * FROM comments WHERE id = $1 AND user_id = $2',
       [commentId, userId]

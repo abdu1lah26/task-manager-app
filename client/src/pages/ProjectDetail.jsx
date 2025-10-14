@@ -18,7 +18,6 @@ const ProjectDetail = () => {
   const [taskError, setTaskError] = useState("");
   const [memberError, setMemberError] = useState("");
 
-  // Move useSocket hook to top level
   const {
     socket,
     isConnected,
@@ -29,7 +28,6 @@ const ProjectDetail = () => {
     emitTaskDeleted,
   } = useSocket();
 
-  // Task form state
   const [taskForm, setTaskForm] = useState({
     title: "",
     description: "",
@@ -64,7 +62,6 @@ const ProjectDetail = () => {
     }
   };
 
-  // Join project room on mount
   useEffect(() => {
     if (id && isConnected) {
       joinProject(id);
@@ -75,35 +72,29 @@ const ProjectDetail = () => {
     }
   }, [id, isConnected]);
 
-  // Listen for real-time updates
   useEffect(() => {
     if (!socket) return;
 
-    // Task created by another user
     socket.on("task-created", (task) => {
       setTasks((prev) => [task, ...prev]);
     });
 
-    // Task updated by another user
     socket.on("task-updated", (updatedTask) => {
       setTasks((prev) =>
         prev.map((t) => (t.id === updatedTask.id ? updatedTask : t))
       );
     });
 
-    // Task deleted by another user
     socket.on("task-deleted", (taskId) => {
       setTasks((prev) => prev.filter((t) => t.id !== taskId));
     });
 
-    // Task status changed by another user
     socket.on("task-status-changed", ({ taskId, newStatus }) => {
       setTasks((prev) =>
         prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
       );
     });
 
-    // Cleanup
     return () => {
       socket.off("task-created");
       socket.off("task-updated");
@@ -114,7 +105,7 @@ const ProjectDetail = () => {
 
   const handleCreateTask = async (e) => {
     e.preventDefault();
-    setTaskError(""); // Clear previous errors
+    setTaskError("");
 
     if (!taskForm.title.trim()) {
       setTaskError("Task title is required");
@@ -135,7 +126,7 @@ const ProjectDetail = () => {
         assignedTo: "",
         dueDate: "",
       });
-      setTaskError(""); // Clear error on success
+      setTaskError("");
     } catch (err) {
       console.error("Failed to create task:", err);
       setTaskError("Failed to create task. Please try again.");
@@ -149,7 +140,7 @@ const ProjectDetail = () => {
       const response = await api.put(`/tasks/${taskId}`, updates);
       setTasks(tasks.map((t) => (t.id === taskId ? response.data.task : t)));
       emitTaskUpdated(id, response.data.task);
-      fetchTasks(); // Refresh to get updated data
+      fetchTasks();
     } catch (err) {
       console.error("Failed to update task:", err);
     }
@@ -167,7 +158,7 @@ const ProjectDetail = () => {
 
   const handleAddMember = async (e) => {
     e.preventDefault();
-    setMemberError(""); // Clear previous errors
+    setMemberError("");
 
     if (!memberEmail.trim()) {
       setMemberError("Please enter email");
@@ -180,8 +171,8 @@ const ProjectDetail = () => {
       await api.post(`/projects/${id}/members`, { email: memberEmail });
       setMemberEmail("");
       setShowAddMember(false);
-      setMemberError(""); // Clear error on success
-      fetchProject(); // Refresh to get updated members
+      setMemberError("");
+      fetchProject();
     } catch (err) {
       console.error("Failed to add member:", err);
       setMemberError(

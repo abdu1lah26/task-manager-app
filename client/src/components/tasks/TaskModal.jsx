@@ -27,7 +27,6 @@ const TaskModal = ({
     fetchTaskDetails();
   }, [task.id]);
 
-  // Listen for real-time comment updates
   useEffect(() => {
     if (!socket) return;
 
@@ -119,10 +118,8 @@ const TaskModal = ({
           </button>
         </div>
 
-        {/* Content */}
         <div className="task-modal-content">
           {isEditing ? (
-            // Edit Mode
             <div className="task-edit-form">
               <div className="form-group">
                 <label>Title *</label>
@@ -209,7 +206,6 @@ const TaskModal = ({
               </div>
             </div>
           ) : (
-            // View Mode
             <div className="task-view">
               <div className="task-header-info">
                 <h3>{task.title}</h3>

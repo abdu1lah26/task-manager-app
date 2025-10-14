@@ -20,39 +20,38 @@ const io = new Server(server, {
   }
 });
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Basic route
 app.get('/', (req, res) => {
   res.json({ message: 'Task Manager API is running!' });
 });
 
-// Test database route
+/**
+ * Database health check endpoint
+ * Returns current database timestamp
+ */
 app.get('/api/test-db', async (req, res) => {
   try {
     const result = await pool.query('SELECT NOW()');
-    res.json({ 
-      success: true, 
-      time: result.rows[0].now 
+    res.json({
+      success: true,
+      time: result.rows[0].now
     });
   } catch (err) {
     console.error(err);
-    res.status(500).json({ 
-      success: false, 
-      error: 'Database query failed' 
+    res.status(500).json({
+      success: false,
+      error: 'Database query failed'
     });
   }
 });
 
-// Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
 app.use('/api/tasks', taskRoutes);
 
-// Socket.io connection with handler
 handleSocketConnection(io);
 
 const PORT = process.env.PORT || 5000;

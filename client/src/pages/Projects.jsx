@@ -17,14 +17,11 @@ const Projects = () => {
   const [creating, setCreating] = useState(false);
   const [error, setError] = useState("");
 
-  // Fetch projects on mount
   useEffect(() => {
     fetchProjects();
 
-    // Check if we should open the create modal
     if (location.state?.openCreateModal) {
       setShowModal(true);
-      // Clear the state to prevent reopening on refresh
       navigate(location.pathname, { replace: true, state: {} });
     }
   }, []);
@@ -42,7 +39,7 @@ const Projects = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError(""); // Clear previous errors
+    setError("");
 
     if (!formData.name.trim()) {
       setError("Project name is required");
@@ -56,7 +53,7 @@ const Projects = () => {
       setProjects([response.data.project, ...projects]);
       setShowModal(false);
       setFormData({ name: "", description: "" });
-      setError(""); // Clear error on success
+      setError("");
     } catch (err) {
       console.error("Failed to create project:", err);
       setError("Failed to create project. Please try again.");

@@ -1,5 +1,10 @@
 import axios from 'axios';
 
+/**
+ * Axios instance configured for API requests
+ * - Automatically adds JWT token to requests
+ * - Handles 401 errors by redirecting to login
+ */
 const api = axios.create({
   baseURL: process.env.REACT_APP_API_URL,
   headers: {
@@ -7,7 +12,6 @@ const api = axios.create({
   },
 });
 
-// Add token to every request
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
@@ -21,12 +25,10 @@ api.interceptors.request.use(
   }
 );
 
-// Handle response errors
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
-      // Token expired or invalid
       localStorage.removeItem('token');
       localStorage.removeItem('user');
       window.location.href = '/login';
