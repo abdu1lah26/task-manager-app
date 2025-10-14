@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import api from '../utils/api';
-import toast from 'react-hot-toast';
-import { useAuth } from '../hooks/useAuth';
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import api from "../utils/api";
+import toast from "react-hot-toast";
+import { useAuth } from "../hooks/useAuth";
 
 const Projects = () => {
   const navigate = useNavigate();
@@ -11,8 +11,8 @@ const Projects = () => {
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [formData, setFormData] = useState({
-    name: '',
-    description: ''
+    name: "",
+    description: "",
   });
   const [creating, setCreating] = useState(false);
 
@@ -23,12 +23,12 @@ const Projects = () => {
 
   const fetchProjects = async () => {
     try {
-      const response = await api.get('/projects');
+      const response = await api.get("/projects");
       setProjects(response.data.projects);
       setLoading(false);
     } catch (err) {
-      console.error('Fetch projects error:', err);
-      toast.error('Failed to load projects');
+      console.error("Fetch projects error:", err);
+      toast.error("Failed to load projects");
       setLoading(false);
     }
   };
@@ -37,42 +37,44 @@ const Projects = () => {
     e.preventDefault();
 
     if (!formData.name.trim()) {
-      toast.error('Project name is required');
+      toast.error("Project name is required");
       return;
     }
 
     setCreating(true);
 
     try {
-      const response = await api.post('/projects', formData);
-      toast.success('Project created successfully!');
+      const response = await api.post("/projects", formData);
+      toast.success("Project created successfully!");
       setProjects([response.data.project, ...projects]);
       setShowModal(false);
-      setFormData({ name: '', description: '' });
+      setFormData({ name: "", description: "" });
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to create project');
+      toast.error(err.response?.data?.message || "Failed to create project");
     } finally {
       setCreating(false);
     }
   };
 
   const handleDelete = async (projectId) => {
-    if (!window.confirm('Are you sure you want to delete this project?')) {
+    if (!window.confirm("Are you sure you want to delete this project?")) {
       return;
     }
 
     try {
       await api.delete(`/projects/${projectId}`);
-      toast.success('Project deleted successfully');
-      setProjects(projects.filter(p => p.id !== projectId));
+      toast.success("Project deleted successfully");
+      setProjects(projects.filter((p) => p.id !== projectId));
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to delete project');
+      toast.error(err.response?.data?.message || "Failed to delete project");
     }
   };
 
   const handleLogout = () => {
     logout();
-    navigate('/login');
+    setTimeout(() => {
+      navigate("/", { replace: true });
+    }, 0);
   };
 
   if (loading) {
@@ -93,7 +95,10 @@ const Projects = () => {
           <p className="subtitle">{projects.length} project(s) found</p>
         </div>
         <div className="header-actions">
-          <button onClick={() => navigate('/dashboard')} className="btn-secondary">
+          <button
+            onClick={() => navigate("/dashboard")}
+            className="btn-secondary"
+          >
             Dashboard
           </button>
           <button onClick={() => setShowModal(true)} className="btn-primary">
@@ -126,13 +131,15 @@ const Projects = () => {
               </div>
 
               <p className="project-description">
-                {project.description || 'No description provided'}
+                {project.description || "No description provided"}
               </p>
 
               <div className="project-stats">
                 <div className="stat">
                   <span className="stat-label">Members</span>
-                  <span className="stat-value">{project.member_count || 0}</span>
+                  <span className="stat-value">
+                    {project.member_count || 0}
+                  </span>
                 </div>
                 <div className="stat">
                   <span className="stat-label">Tasks</span>
@@ -217,7 +224,7 @@ const Projects = () => {
                   className="btn-primary"
                   disabled={creating}
                 >
-                  {creating ? 'Creating...' : 'Create Project'}
+                  {creating ? "Creating..." : "Create Project"}
                 </button>
               </div>
             </form>
