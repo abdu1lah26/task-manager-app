@@ -12,7 +12,7 @@ export const register = async (req, res) => {
         message: 'Please provide username, email, and password'
       });
     }
-
+ 
     const existingUser = await pool.query(
       'SELECT * FROM users WHERE email = $1 OR username = $2',
       [email, username]
