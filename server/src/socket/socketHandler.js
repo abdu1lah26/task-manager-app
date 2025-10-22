@@ -7,12 +7,16 @@ const connectedUsers = new Map();
 
 export const handleSocketConnection = (io) => {
   io.on('connection', (socket) => {
-    console.log('✅ New client connected:', socket.id);
+    if (process.env.NODE_ENV === 'development') {
+      console.log('✅ New client connected:', socket.id);
+    }
 
     socket.on('user-connected', (userId) => {
       connectedUsers.set(userId, socket.id);
       socket.userId = userId;
-      console.log(`User ${userId} connected with socket ${socket.id}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`User ${userId} connected with socket ${socket.id}`);
+      }
 
       io.emit('user-status-changed', {
         userId,
@@ -22,7 +26,9 @@ export const handleSocketConnection = (io) => {
 
     socket.on('join-project', (projectId) => {
       socket.join(`project-${projectId}`);
-      console.log(`Socket ${socket.id} joined project-${projectId}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Socket ${socket.id} joined project-${projectId}`);
+      }
 
       socket.to(`project-${projectId}`).emit('user-joined-project', {
         userId: socket.userId,
@@ -32,25 +38,33 @@ export const handleSocketConnection = (io) => {
 
     socket.on('leave-project', (projectId) => {
       socket.leave(`project-${projectId}`);
-      console.log(`Socket ${socket.id} left project-${projectId}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Socket ${socket.id} left project-${projectId}`);
+      }
     });
 
     socket.on('task-created', (data) => {
       const { projectId, task } = data;
       socket.to(`project-${projectId}`).emit('task-created', task);
-      console.log(`Task created broadcasted to project-${projectId}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Task created broadcasted to project-${projectId}`);
+      }
     });
 
     socket.on('task-updated', (data) => {
       const { projectId, task } = data;
       socket.to(`project-${projectId}`).emit('task-updated', task);
-      console.log(`Task updated broadcasted to project-${projectId}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Task updated broadcasted to project-${projectId}`);
+      }
     });
 
     socket.on('task-deleted', (data) => {
       const { projectId, taskId } = data;
       socket.to(`project-${projectId}`).emit('task-deleted', taskId);
-      console.log(`Task deleted broadcasted to project-${projectId}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Task deleted broadcasted to project-${projectId}`);
+      }
     });
 
     socket.on('task-status-changed', (data) => {
@@ -59,7 +73,9 @@ export const handleSocketConnection = (io) => {
         taskId,
         newStatus
       });
-      console.log(`Task status changed broadcasted to project-${projectId}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Task status changed broadcasted to project-${projectId}`);
+      }
     });
 
     socket.on('comment-added', (data) => {
@@ -68,7 +84,9 @@ export const handleSocketConnection = (io) => {
         taskId,
         comment
       });
-      console.log(`Comment added broadcasted to project-${projectId}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Comment added broadcasted to project-${projectId}`);
+      }
     });
 
     socket.on('comment-deleted', (data) => {
@@ -77,7 +95,9 @@ export const handleSocketConnection = (io) => {
         taskId,
         commentId
       });
-      console.log(`Comment deleted broadcasted to project-${projectId}`);
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`Comment deleted broadcasted to project-${projectId}`);
+      }
     });
 
     socket.on('user-typing', (data) => {
@@ -89,7 +109,9 @@ export const handleSocketConnection = (io) => {
     });
 
     socket.on('disconnect', () => {
-      console.log('❌ Client disconnected:', socket.id);
+      if (process.env.NODE_ENV === 'development') {
+        console.log('❌ Client disconnected:', socket.id);
+      }
 
       if (socket.userId) {
         connectedUsers.delete(socket.userId);
