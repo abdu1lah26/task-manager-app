@@ -66,7 +66,7 @@ This is a **Task Manager App** - a collaborative tool where teams can create pro
 client/src/
 ├── components/          # Reusable UI pieces
 │   ├── auth/           # Login, Register, Protected Routes
-│   ├── common/         # Shared components (ErrorBoundary, etc.)
+│   ├── common/         # Shared components (ConnectionStatus, etc.)
 │   └── tasks/          # Task-related components (TaskBoard, TaskCard)
 │
 ├── context/            # Global state management
@@ -287,7 +287,7 @@ User A creates task
 ### Advanced Skills
 
 ✅ Real-time communication (Socket.IO)
-✅ Error handling (Error Boundary)
+✅ Error handling (try-catch blocks)
 ✅ Environment variables
 ✅ Interceptors (axios)
 
