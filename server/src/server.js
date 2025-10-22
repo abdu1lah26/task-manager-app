@@ -3,13 +3,15 @@ import cors from 'cors';
 import http from 'http';
 import { Server } from 'socket.io';
 import dotenv from 'dotenv';
+
+// Load environment variables FIRST before importing database
+dotenv.config();
+
 import pool from './config/database.js';
 import authRoutes from './routes/auth.routes.js';
 import projectRoutes from './routes/projects.routes.js';
 import taskRoutes from './routes/tasks.routes.js';
 import { handleSocketConnection } from './socket/socketHandler.js';
-
-dotenv.config();
 
 const app = express();
 const server = http.createServer(app);
