@@ -15,14 +15,26 @@ import { handleSocketConnection } from './socket/socketHandler.js';
 
 const app = express();
 const server = http.createServer(app);
+
+// CORS configuration - allow both local development and production frontend
+const allowedOrigins = [
+  'http://localhost:3000',
+  process.env.CLIENT_URL,
+  'https://task-manager-app-scid.vercel.app'
+].filter(Boolean); // Remove undefined values
+
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL,
-    methods: ['GET', 'POST']
+    origin: allowedOrigins,
+    methods: ['GET', 'POST'],
+    credentials: true
   }
 });
 
-app.use(cors());
+app.use(cors({
+  origin: allowedOrigins,
+  credentials: true
+}));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
