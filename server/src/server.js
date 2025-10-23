@@ -20,7 +20,8 @@ const server = http.createServer(app);
 const allowedOrigins = [
   'http://localhost:3000',
   process.env.CLIENT_URL,
-  'https://task-manager-app-scid.vercel.app'
+  'https://task-manager-app-scid.vercel.app',
+  'https://task-manager-app-rosy-alpha.vercel.app'
 ].filter(Boolean); // Remove undefined values
 
 const io = new Server(server, {
