@@ -17,25 +17,31 @@ const app = express();
 const server = http.createServer(app);
 
 // CORS configuration - allow both local development and production frontend
-const allowedOrigins = [
-  'http://localhost:3000',
-  process.env.CLIENT_URL,
-  'https://task-manager-app-scid.vercel.app',
-  'https://task-manager-app-rosy-alpha.vercel.app'
-].filter(Boolean); // Remove undefined values
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests with no origin (mobile apps, Postman, etc.)
+    if (!origin) return callback(null, true);
+
+    // Allow localhost for development
+    if (origin.includes('localhost:3000')) return callback(null, true);
+
+    // Allow all Vercel deployment URLs for this project
+    if (origin.includes('vercel.app')) return callback(null, true);
+
+    // Allow the configured CLIENT_URL
+    if (origin === process.env.CLIENT_URL) return callback(null, true);
+
+    callback(new Error('Not allowed by CORS'));
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS']
+};
 
 const io = new Server(server, {
-  cors: {
-    origin: allowedOrigins,
-    methods: ['GET', 'POST'],
-    credentials: true
-  }
+  cors: corsOptions
 });
 
-app.use(cors({
-  origin: allowedOrigins,
-  credentials: true
-}));
+app.use(cors(corsOptions));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
