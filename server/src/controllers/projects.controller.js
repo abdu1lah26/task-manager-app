@@ -269,14 +269,18 @@ export const addMember = async (req, res) => {
 export const removeMember = async (req, res) => {
   try {
     const { id, memberId } = req.params;
-    const userId = req.user.userId;
+    const userId = parseInt(req.user.userId);
+
+    console.log('Remove member - Project ID:', id, 'Member to remove:', memberId, 'Current user:', userId);
 
     const roleCheck = await pool.query(
-      `SELECT * FROM projects p
+      `SELECT p.owner_id, pm.role FROM projects p
        LEFT JOIN project_members pm ON p.id = pm.project_id AND pm.user_id = $2
        WHERE p.id = $1 AND (p.owner_id = $2 OR pm.role = 'admin')`,
       [id, userId]
     );
+
+    console.log('Role check result:', roleCheck.rows);
 
     if (roleCheck.rows.length === 0) {
       return res.status(403).json({

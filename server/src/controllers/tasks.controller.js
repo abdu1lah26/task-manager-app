@@ -279,31 +279,12 @@ export const deleteTask = async (req, res) => {
 
     console.log('Delete task - Task ID:', id, 'User ID:', userId, 'Type:', typeof userId);
 
-    // First, check what the actual values are
-    const taskInfo = await pool.query(
-      `SELECT t.id, t.title, t.created_by, p.id as project_id, p.name as project_name, p.owner_id
-       FROM tasks t
-       JOIN projects p ON t.project_id = p.id
-       WHERE t.id = $1`,
-      [id]
-    );
-
-    if (taskInfo.rows.length > 0) {
-      console.log('Task info:', {
-        taskId: taskInfo.rows[0].id,
-        taskTitle: taskInfo.rows[0].title,
-        taskCreator: taskInfo.rows[0].created_by,
-        projectId: taskInfo.rows[0].project_id,
-        projectName: taskInfo.rows[0].project_name,
-        projectOwner: taskInfo.rows[0].owner_id,
-        currentUser: userId
-      });
-    }
-
+    // Check if user is a project member (owner or member)
     const accessCheck = await pool.query(
       `SELECT t.* FROM tasks t
        JOIN projects p ON t.project_id = p.id
-       WHERE t.id = $1 AND (p.owner_id = $2 OR t.created_by = $2)`,
+       LEFT JOIN project_members pm ON p.id = pm.project_id AND pm.user_id = $2
+       WHERE t.id = $1 AND (p.owner_id = $2 OR pm.user_id = $2)`,
       [id, userId]
     );
 
@@ -312,7 +293,7 @@ export const deleteTask = async (req, res) => {
     if (accessCheck.rows.length === 0) {
       return res.status(403).json({
         success: false,
-        message: 'Only project owner or task creator can delete task'
+        message: 'Access denied. You must be a project member to delete tasks.'
       });
     }
 
