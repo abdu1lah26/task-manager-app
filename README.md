@@ -43,8 +43,6 @@
 - [🌐 Real-Time Communication](#-real-time-communication)
 - [💡 Key Concepts](#-key-concepts)
 - [🎓 Learning Outcomes](#-learning-outcomes)
-- [💼 Interview Highlights](#-interview-highlights)
-- [🧠 Future Improvements](#-future-improvements)
 
 ---
 
