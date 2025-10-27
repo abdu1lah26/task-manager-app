@@ -275,9 +275,7 @@ export const updateTaskStatus = async (req, res) => {
 export const deleteTask = async (req, res) => {
   try {
     const { id } = req.params;
-    const userId = parseInt(req.user.userId); // Ensure integer type
-
-    console.log('Delete task - Task ID:', id, 'User ID:', userId, 'Type:', typeof userId);
+    const userId = parseInt(req.user.userId);
 
     // Check if user is a project member (owner or member)
     const accessCheck = await pool.query(
@@ -287,8 +285,6 @@ export const deleteTask = async (req, res) => {
        WHERE t.id = $1 AND (p.owner_id = $2 OR pm.user_id = $2)`,
       [id, userId]
     );
-
-    console.log('Access check - rows found:', accessCheck.rows.length);
 
     if (accessCheck.rows.length === 0) {
       return res.status(403).json({
