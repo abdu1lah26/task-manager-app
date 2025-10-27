@@ -9,9 +9,9 @@ export const getAllProjects = async (req, res) => {
         (SELECT COUNT(*) FROM project_members WHERE project_id = p.id) as member_count,
         (SELECT COUNT(*) FROM tasks WHERE project_id = p.id) as task_count
        FROM projects p
-       LEFT JOIN users u ON p.owner_id = u.id
+       LEFT JOIN users u ON p.created_by = u.id
        LEFT JOIN project_members pm ON p.id = pm.project_id
-       WHERE p.owner_id = $1 OR pm.user_id = $1
+       WHERE p.created_by = $1 OR pm.user_id = $1
        ORDER BY p.created_at DESC`,
       [userId]
     );
@@ -37,9 +37,9 @@ export const getProjectById = async (req, res) => {
     const accessCheck = await pool.query(
       `SELECT p.*, u.username as owner_name
        FROM projects p
-       LEFT JOIN users u ON p.owner_id = u.id
+       LEFT JOIN users u ON p.created_by = u.id
        LEFT JOIN project_members pm ON p.id = pm.project_id
-       WHERE p.id = $1 AND (p.owner_id = $2 OR pm.user_id = $2)`,
+       WHERE p.id = $1 AND (p.created_by = $2 OR pm.user_id = $2)`,
       [id, userId]
     );
 
@@ -51,7 +51,7 @@ export const getProjectById = async (req, res) => {
     }
 
     const members = await pool.query(
-      `SELECT u.id, u.username, u.email, u.full_name, pm.role, pm.joined_at
+      `SELECT u.id, u.username, u.email, pm.role, pm.joined_at
        FROM project_members pm
        JOIN users u ON pm.user_id = u.id
        WHERE pm.project_id = $1`,
@@ -98,7 +98,7 @@ export const createProject = async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO projects (name, description, owner_id)
+      `INSERT INTO projects (name, description, created_by)
        VALUES ($1, $2, $3)
        RETURNING *`,
       [name, description || null, userId]
@@ -133,7 +133,7 @@ export const updateProject = async (req, res) => {
     const userId = req.user.userId;
 
     const ownerCheck = await pool.query(
-      'SELECT * FROM projects WHERE id = $1 AND owner_id = $2',
+      'SELECT * FROM projects WHERE id = $1 AND created_by = $2',
       [id, userId]
     );
 
@@ -175,7 +175,7 @@ export const deleteProject = async (req, res) => {
     const userId = req.user.userId;
 
     const ownerCheck = await pool.query(
-      'SELECT * FROM projects WHERE id = $1 AND owner_id = $2',
+      'SELECT * FROM projects WHERE id = $1 AND created_by = $2',
       [id, userId]
     );
 
@@ -210,7 +210,7 @@ export const addMember = async (req, res) => {
     const roleCheck = await pool.query(
       `SELECT * FROM projects p
        LEFT JOIN project_members pm ON p.id = pm.project_id AND pm.user_id = $2
-       WHERE p.id = $1 AND (p.owner_id = $2 OR pm.role = 'admin')`,
+       WHERE p.id = $1 AND (p.created_by = $2 OR pm.role = 'admin')`,
       [id, userId]
     );
 
@@ -274,7 +274,7 @@ export const removeMember = async (req, res) => {
     const roleCheck = await pool.query(
       `SELECT * FROM projects p
        LEFT JOIN project_members pm ON p.id = pm.project_id AND pm.user_id = $2
-       WHERE p.id = $1 AND (p.owner_id = $2 OR pm.role = 'admin')`,
+       WHERE p.id = $1 AND (p.created_by = $2 OR pm.role = 'admin')`,
       [id, userId]
     );
 
@@ -286,7 +286,7 @@ export const removeMember = async (req, res) => {
     }
 
     const ownerCheck = await pool.query(
-      'SELECT * FROM projects WHERE id = $1 AND owner_id = $2',
+      'SELECT * FROM projects WHERE id = $1 AND created_by = $2',
       [id, memberId]
     );
 
