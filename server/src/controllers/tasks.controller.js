@@ -8,7 +8,7 @@ export const getProjectTasks = async (req, res) => {
     const accessCheck = await pool.query(
       `SELECT * FROM projects p
        LEFT JOIN project_members pm ON p.id = pm.project_id
-       WHERE p.id = $1 AND (p.created_by = $2 OR pm.user_id = $2)`,
+       WHERE p.id = $1 AND (p.owner_id = $2 OR pm.user_id = $2)`,
       [projectId, userId]
     );
 
@@ -61,7 +61,7 @@ export const getTaskById = async (req, res) => {
        LEFT JOIN users u1 ON t.created_by = u1.id
        LEFT JOIN users u2 ON t.assigned_to = u2.id
        LEFT JOIN project_members pm ON p.id = pm.project_id
-       WHERE t.id = $1 AND (p.created_by = $2 OR pm.user_id = $2)`,
+       WHERE t.id = $1 AND (p.owner_id = $2 OR pm.user_id = $2)`,
       [id, userId]
     );
 
@@ -73,7 +73,7 @@ export const getTaskById = async (req, res) => {
     }
 
     const comments = await pool.query(
-      `SELECT c.*, u.username, u.email
+      `SELECT c.*, u.username, u.full_name, u.email
        FROM comments c
        JOIN users u ON c.user_id = u.id
        WHERE c.task_id = $1
@@ -113,7 +113,7 @@ export const createTask = async (req, res) => {
     const accessCheck = await pool.query(
       `SELECT * FROM projects p
        LEFT JOIN project_members pm ON p.id = pm.project_id
-       WHERE p.id = $1 AND (p.created_by = $2 OR pm.user_id = $2)`,
+       WHERE p.id = $1 AND (p.owner_id = $2 OR pm.user_id = $2)`,
       [projectId, userId]
     );
 
@@ -125,10 +125,10 @@ export const createTask = async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO tasks (title, description, project_id, created_by, assigned_to, priority)
-       VALUES ($1, $2, $3, $4, $5, $6)
+      `INSERT INTO tasks (title, description, project_id, created_by, assigned_to, priority, due_date)
+       VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [title, description || null, projectId, userId, assignedTo || null, priority || 'medium']
+      [title, description || null, projectId, userId, assignedTo || null, priority || 'medium', dueDate || null]
     );
 
     const task = result.rows[0];
@@ -168,7 +168,7 @@ export const updateTask = async (req, res) => {
       `SELECT t.* FROM tasks t
        JOIN projects p ON t.project_id = p.id
        LEFT JOIN project_members pm ON p.id = pm.project_id
-       WHERE t.id = $1 AND (p.created_by = $2 OR pm.user_id = $2)`,
+       WHERE t.id = $1 AND (p.owner_id = $2 OR pm.user_id = $2)`,
       [id, userId]
     );
 
@@ -186,10 +186,11 @@ export const updateTask = async (req, res) => {
            status = COALESCE($3, status),
            priority = COALESCE($4, priority),
            assigned_to = COALESCE($5, assigned_to),
+           due_date = COALESCE($6, due_date),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $6
+       WHERE id = $7
        RETURNING *`,
-      [title, description, status, priority, assignedTo, id]
+      [title, description, status, priority, assignedTo, dueDate, id]
     );
 
     const taskWithInfo = await pool.query(
@@ -234,7 +235,7 @@ export const updateTaskStatus = async (req, res) => {
       `SELECT t.* FROM tasks t
        JOIN projects p ON t.project_id = p.id
        LEFT JOIN project_members pm ON p.id = pm.project_id
-       WHERE t.id = $1 AND (p.created_by = $2 OR pm.user_id = $2)`,
+       WHERE t.id = $1 AND (p.owner_id = $2 OR pm.user_id = $2)`,
       [id, userId]
     );
 
@@ -271,7 +272,7 @@ export const deleteTask = async (req, res) => {
     const accessCheck = await pool.query(
       `SELECT t.* FROM tasks t
        JOIN projects p ON t.project_id = p.id
-       WHERE t.id = $1 AND (p.created_by = $2 OR t.created_by = $2)`,
+       WHERE t.id = $1 AND (p.owner_id = $2 OR t.created_by = $2)`,
       [id, userId]
     );
 
@@ -314,7 +315,7 @@ export const addComment = async (req, res) => {
       `SELECT t.* FROM tasks t
        JOIN projects p ON t.project_id = p.id
        LEFT JOIN project_members pm ON p.id = pm.project_id
-       WHERE t.id = $1 AND (p.created_by = $2 OR pm.user_id = $2)`,
+       WHERE t.id = $1 AND (p.owner_id = $2 OR pm.user_id = $2)`,
       [taskId, userId]
     );
 
@@ -333,7 +334,7 @@ export const addComment = async (req, res) => {
     );
 
     const commentWithInfo = await pool.query(
-      `SELECT c.*, u.username, u.email
+      `SELECT c.*, u.username, u.full_name, u.email
        FROM comments c
        JOIN users u ON c.user_id = u.id
        WHERE c.id = $1`,

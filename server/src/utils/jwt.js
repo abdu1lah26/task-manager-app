@@ -23,11 +23,11 @@ import jwt from 'jsonwebtoken';
  * Called after successful login/register
  * Creates a token containing user info
  */
-export const generateToken = (userId, email) => {
+export const generateToken = (userId, email, role) => {
   // jwt.sign() creates the token
   return jwt.sign(
     // Payload: Information we want to store in token
-    { userId, email },
+    { userId, email, role },
 
     // Secret key: Used to encrypt/decrypt token (from .env file)
     process.env.JWT_SECRET,
