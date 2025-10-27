@@ -124,11 +124,14 @@ export const createTask = async (req, res) => {
       });
     }
 
+    // Convert empty strings to null for integer fields
+    const cleanAssignedTo = assignedTo === "" ? null : assignedTo;
+
     const result = await pool.query(
       `INSERT INTO tasks (title, description, project_id, created_by, assigned_to, priority, due_date)
        VALUES ($1, $2, $3, $4, $5, $6, $7)
        RETURNING *`,
-      [title, description || null, projectId, userId, assignedTo || null, priority || 'medium', dueDate || null]
+      [title, description || null, projectId, userId, cleanAssignedTo || null, priority || 'medium', dueDate || null]
     );
 
     const task = result.rows[0];
@@ -179,6 +182,9 @@ export const updateTask = async (req, res) => {
       });
     }
 
+    // Convert empty strings to null for integer fields
+    const cleanAssignedTo = assignedTo === "" ? null : assignedTo;
+
     const result = await pool.query(
       `UPDATE tasks 
        SET title = COALESCE($1, title),
@@ -190,7 +196,7 @@ export const updateTask = async (req, res) => {
            updated_at = CURRENT_TIMESTAMP
        WHERE id = $7
        RETURNING *`,
-      [title, description, status, priority, assignedTo, dueDate, id]
+      [title, description, status, priority, cleanAssignedTo, dueDate, id]
     );
 
     const taskWithInfo = await pool.query(
