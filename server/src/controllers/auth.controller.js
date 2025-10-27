@@ -28,15 +28,15 @@ export const register = async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, 10);
 
     const result = await pool.query(
-      `INSERT INTO users (username, email, password, full_name) 
-       VALUES ($1, $2, $3, $4) 
-       RETURNING id, username, email, full_name, role, created_at`,
-      [username, email, hashedPassword, fullName || null]
+      `INSERT INTO users (username, email, password) 
+       VALUES ($1, $2, $3) 
+       RETURNING id, username, email, created_at`,
+      [username, email, hashedPassword]
     );
 
     const user = result.rows[0];
 
-    const token = generateToken(user.id, user.email, user.role);
+    const token = generateToken(user.id, user.email);
 
     res.status(201).json({
       success: true,
@@ -45,9 +45,7 @@ export const register = async (req, res) => {
       user: {
         id: user.id,
         username: user.username,
-        email: user.email,
-        fullName: user.full_name,
-        role: user.role
+        email: user.email
       }
     });
   } catch (err) {
@@ -93,7 +91,7 @@ export const login = async (req, res) => {
       });
     }
 
-    const token = generateToken(user.id, user.email, user.role);
+    const token = generateToken(user.id, user.email);
 
     res.json({
       success: true,
@@ -102,9 +100,7 @@ export const login = async (req, res) => {
       user: {
         id: user.id,
         username: user.username,
-        email: user.email,
-        fullName: user.full_name,
-        role: user.role
+        email: user.email
       }
     });
   } catch (err) {
@@ -119,7 +115,7 @@ export const login = async (req, res) => {
 export const getMe = async (req, res) => {
   try {
     const result = await pool.query(
-      'SELECT id, username, email, full_name, role, created_at FROM users WHERE id = $1',
+      'SELECT id, username, email, created_at FROM users WHERE id = $1',
       [req.user.userId]
     );
 
@@ -138,8 +134,6 @@ export const getMe = async (req, res) => {
         id: user.id,
         username: user.username,
         email: user.email,
-        fullName: user.full_name,
-        role: user.role,
         createdAt: user.created_at
       }
     });
