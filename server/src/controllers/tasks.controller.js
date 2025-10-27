@@ -125,10 +125,10 @@ export const createTask = async (req, res) => {
     }
 
     const result = await pool.query(
-      `INSERT INTO tasks (title, description, project_id, created_by, assigned_to, priority, due_date)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO tasks (title, description, project_id, created_by, assigned_to, priority)
+       VALUES ($1, $2, $3, $4, $5, $6)
        RETURNING *`,
-      [title, description || null, projectId, userId, assignedTo || null, priority || 'medium', dueDate || null]
+      [title, description || null, projectId, userId, assignedTo || null, priority || 'medium']
     );
 
     const task = result.rows[0];
@@ -186,11 +186,10 @@ export const updateTask = async (req, res) => {
            status = COALESCE($3, status),
            priority = COALESCE($4, priority),
            assigned_to = COALESCE($5, assigned_to),
-           due_date = COALESCE($6, due_date),
            updated_at = CURRENT_TIMESTAMP
-       WHERE id = $7
+       WHERE id = $6
        RETURNING *`,
-      [title, description, status, priority, assignedTo, dueDate, id]
+      [title, description, status, priority, assignedTo, id]
     );
 
     const taskWithInfo = await pool.query(
