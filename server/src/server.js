@@ -7,7 +7,7 @@ import dotenv from 'dotenv';
 // Load environment variables FIRST before importing database
 dotenv.config();
 
-import pool, { testConnection } from './config/database.js';
+import pool from './config/database.js';
 import authRoutes from './routes/auth.routes.js';
 import projectRoutes from './routes/projects.routes.js';
 import taskRoutes from './routes/tasks.routes.js';
@@ -77,16 +77,7 @@ handleSocketConnection(io);
 
 const PORT = process.env.PORT || 5000;
 
-// Start server and test database connection
-server.listen(PORT, async () => {
+server.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📡 Socket.io ready for connections`);
-
-  // Test database connection after server starts
-  try {
-    await testConnection();
-  } catch (err) {
-    console.error('⚠️ Warning: Database connection failed, but server is still running');
-    console.error('Database will retry on first request');
-  }
 });
