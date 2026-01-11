@@ -1,271 +1,188 @@
 # 🧩 Task Manager App
 
-> A **collaborative task management web application** where teams can create projects, manage tasks, and see updates in **real-time** — built using **React, Node.js, Express, PostgreSQL, and Socket.IO**.
+A **full-stack task management application** built using the **MERN + PostgreSQL** stack.
+It allows users to create, update, delete, and organize tasks efficiently — complete with authentication, real-time updates, and responsive design.
+
+🌐 **Live App:** [https://task-manager-app-rosy-alpha.vercel.app/](https://task-manager-app-rosy-alpha.vercel.app/)
+📦 **GitHub Repository:** [https://github.com/abdu1lah26/task-manager-app](https://github.com/abdu1lah26/task-manager-app)
 
 ---
 
 ## 🚀 Features
 
-✅ Real-time task updates (Socket.IO)  
-✅ Secure JWT authentication  
-✅ RESTful API design (CRUD operations)  
-✅ Password hashing with bcrypt  
-✅ React Context + Custom Hooks for global state  
-✅ PostgreSQL database integration  
-✅ Axios for HTTP requests  
-✅ Protected routes with role-based access  
+✅ **User Authentication**
+
+* JWT-based authentication
+* Role-based access (user/admin)
+* Password hashing using bcrypt
+
+✅ **Task Management**
+
+* Create, read, update, and delete tasks
+* Mark tasks as completed or pending
+* Filter and sort by task status or priority
+
+✅ **Real-Time Updates**
+
+* Live task status updates using **Socket.IO**
+
+✅ **Responsive UI**
+
+* Clean and mobile-friendly interface (React + Tailwind CSS)
+
+✅ **Database Integration**
+
+* PostgreSQL on Render Cloud
+* Sequelize ORM for smooth communication between Node.js and PostgreSQL
+
+✅ **Deployment**
+
+* Frontend deployed on **Vercel**
+* Backend + Database deployed on **Render**
 
 ---
 
-## 🏗️ Tech Stack
+## 🛠️ Tech Stack
 
-| Layer | Technology | Description |
-|--------|-------------|-------------|
-| **Frontend** | React | Interactive UI (component-based) |
-| | React Router | Smooth navigation without page reloads |
-| | Axios | Communicates with backend APIs |
-| | Socket.IO Client | Real-time updates instantly |
-| **Backend** | Node.js + Express | Handles API requests & logic |
-| | Socket.IO Server | Manages live updates for all users |
-| | JWT | Authentication & authorization |
-| | bcrypt | Encrypts user passwords |
-| **Database** | PostgreSQL | Stores users, projects, and tasks |
+| Layer              | Technology                               |
+| ------------------ | ---------------------------------------- |
+| **Frontend**       | React.js, Tailwind CSS, Axios            |
+| **Backend**        | Node.js, Express.js                      |
+| **Database**       | PostgreSQL (Render Cloud)                |
+| **Authentication** | JWT, bcrypt.js                           |
+| **Real-time**      | Socket.IO                                |
+| **Deployment**     | Vercel (Frontend), Render (Backend + DB) |
 
 ---
 
-## 🧭 Table of Contents
+## 📁 Folder Structure
 
-- [📚 Project Overview](#-project-overview)
-- [⚙️ Installation & Setup](#️-installation--setup)
-- [🗂️ File Structure](#️-file-structure)
-- [🔄 Data Flow Example](#-data-flow-example)
-- [🔐 Authentication Flow](#-authentication-flow)
-- [🌐 Real-Time Communication](#-real-time-communication)
-- [💡 Key Concepts](#-key-concepts)
-- [🎓 Learning Outcomes](#-learning-outcomes)
-- [💼 Interview Highlights](#-interview-highlights)
-- [🧠 Future Improvements](#-future-improvements)
-
----
-
-## 📚 Project Overview
-
-The **Task Manager App** lets users:
-- Create and manage projects  
-- Add, edit, and delete tasks  
-- Collaborate with teammates  
-- Get **real-time updates** without refreshing  
-
-Think of it as a simplified version of **Trello** or **Asana** — perfect for teams managing daily workflows.
+```
+task-manager-app/
+│
+├── client/                # Frontend (React)
+│   ├── src/
+│   │   ├── components/    # Reusable UI components
+│   │   ├── pages/         # Pages (Dashboard, Login, etc.)
+│   │   ├── services/      # API calls using Axios
+│   │   └── App.js
+│   └── package.json
+│
+├── server/                # Backend (Node + Express)
+│   ├── config/            # DB connection, dotenv setup
+│   ├── controllers/       # Logic for tasks & users
+│   ├── middleware/        # Auth middlewares (JWT, error handler)
+│   ├── models/            # Sequelize models
+│   ├── routes/            # RESTful API endpoints
+│   ├── utils/             # Helper functions
+│   └── server.js
+│
+├── .env.example
+├── README.md
+└── package.json
+```
 
 ---
 
 ## ⚙️ Installation & Setup
 
-### 1️⃣ Clone the repository
-```bash
-git clone https://github.com/yourusername/task-manager.git
-cd task-manager
-````
-
-### 2️⃣ Install dependencies
+### 1️⃣ Clone the Repository
 
 ```bash
-cd client && npm install
-cd ../server && npm install
+git clone https://github.com/abdu1lah26/task-manager-app.git
+cd task-manager-app
 ```
 
-### 3️⃣ Configure environment variables
-
-Create a `.env` file inside `/server`:
-
-```
-DATABASE_URL=your_postgres_url
-JWT_SECRET=your_secret_key
-PORT=5000
-```
-
-### 4️⃣ Run the app
+### 2️⃣ Setup Backend
 
 ```bash
-# Run backend
 cd server
-npm run dev
+npm install
+```
 
-# Run frontend
-cd ../client
+Create a `.env` file in `/server`:
+
+```env
+PORT=5000
+DATABASE_URL=your_postgres_connection_url
+JWT_SECRET=your_secret_key
+```
+
+Run backend:
+
+```bash
 npm start
 ```
 
----
+### 3️⃣ Setup Frontend
 
-## 🗂️ File Structure
-
-### 🖥️ Client (Frontend)
-
-```
-client/src/
-├── components/
-│   ├── auth/             # Login, Register, Protected Routes
-│   ├── common/           # Shared UI components
-│   └── tasks/            # Task-related components
-│
-├── context/
-│   ├── AuthContext.jsx   # Manages login state
-│   └── SocketContext.jsx # Handles real-time socket connection
-│
-├── hooks/
-│   ├── useAuth.js        # Custom hook for AuthContext
-│   └── useSocket.js      # Custom hook for SocketContext
-│
-├── pages/
-│   ├── Home.jsx
-│   ├── Dashboard.jsx
-│   ├── Projects.jsx
-│   └── ProjectDetail.jsx
-│
-├── utils/
-│   └── api.js            # Axios instance setup
-│
-├── App.jsx               # Root component
-└── index.js              # Entry point
+```bash
+cd ../client
+npm install
+npm start
 ```
 
-### ⚙️ Server (Backend)
-
-```
-server/src/
-├── config/
-│   └── database.js       # PostgreSQL connection setup
-│
-├── controllers/
-│   ├── auth.controller.js
-│   ├── projects.controller.js
-│   └── tasks.controller.js
-│
-├── middleware/
-│   └── auth.js           # JWT verification
-│
-├── routes/
-│   ├── auth.routes.js
-│   ├── projects.routes.js
-│   └── tasks.routes.js
-│
-├── socket/
-│   └── socketHandler.js  # Real-time event handlers
-│
-├── utils/
-│   └── jwt.js            # Token creation & verification
-│
-└── server.js             # Entry point (starts the server)
-```
+Now the app runs on:
+**Frontend:** [http://localhost:3000](http://localhost:3000)
+**Backend:** [http://localhost:5000](http://localhost:5000)
 
 ---
 
-## 🔄 Data Flow Example
+## 🧠 Key Learnings & Challenges
 
-### 🧩 User Creates a Task
+1. **PostgreSQL SSL Errors**
+   → Solved by enabling SSL in Render DB config (`ssl: { rejectUnauthorized: false }`).
 
-```
-1️⃣ User fills task form → clicks “Create Task”
-2️⃣ Frontend sends POST request using Axios with JWT token
-3️⃣ Backend verifies JWT via middleware
-4️⃣ Controller saves task in PostgreSQL
-5️⃣ Socket.IO emits “task-created” event
-6️⃣ All connected clients update in real time 🚀
-```
+2. **.env Not Loading**
+   → Fixed by adding `dotenv.config()` at the top of `server.js`.
 
----
+3. **CORS Policy Errors**
+   → Allowed all Vercel domains dynamically in CORS middleware.
 
-## 🔐 Authentication Flow
+4. **Schema Mismatches During Migration**
+   → Verified Sequelize models with actual DB schema before production push.
 
-### 🔸 Registration
-
-1. User enters email, username, password
-2. Password hashed via **bcrypt**
-3. User saved in **PostgreSQL**
-4. JWT token created and sent to client
-5. Frontend stores token in **localStorage**
-
-### 🔸 Login
-
-1. User enters credentials
-2. Backend validates & compares hashed password
-3. If valid → new JWT generated
-4. Client stores token & grants access to protected routes
+5. **Socket.IO Issues in Production**
+   → Added `REACT_APP_SOCKET_URL` environment variable for the frontend to connect properly.
 
 ---
 
-## 🌐 Real-Time Communication
+## 🧩 API Endpoints Overview
 
-### Without Socket.IO
-
-```
-User A creates a task → User B must refresh page to see it ❌
-```
-
-### With Socket.IO
-
-```
-User A creates a task → Server broadcasts instantly → User B sees update live ✅
-```
-
-**Socket Events Used:**
-
-* `task-created`
-* `task-updated`
-* `task-deleted`
-* `task-status-changed`
-* `comment-added`
+| Method | Endpoint             | Description         |
+| ------ | -------------------- | ------------------- |
+| POST   | `/api/auth/register` | Register new user   |
+| POST   | `/api/auth/login`    | Login existing user |
+| GET    | `/api/tasks`         | Get all tasks       |
+| POST   | `/api/tasks`         | Create a new task   |
+| PUT    | `/api/tasks/:id`     | Update a task       |
+| DELETE | `/api/tasks/:id`     | Delete a task       |
 
 ---
 
-## 💡 Key Concepts
+## 📦 Deployment Notes
 
-| Concept                | Description                                              |
-| ---------------------- | -------------------------------------------------------- |
-| **REST API**           | Defines standard CRUD endpoints (GET, POST, PUT, DELETE) |
-| **JWT Authentication** | Stateless token-based login                              |
-| **React Context**      | Global state management without prop drilling            |
-| **Middleware**         | Security checkpoint for verifying users                  |
-| **Socket.IO**          | Enables bi-directional, real-time data flow              |
+* **Frontend:** Vercel automatically builds from `client/` using `npm run build`.
+* **Backend:** Deployed on Render using `npm start` with `server.js` as the entry point.
+* **Environment Variables:** Configured separately in Vercel and Render dashboard.
+* **Database:** PostgreSQL hosted on Render Cloud (free tier).
 
 ---
 
-## 🎓 Learning Outcomes
+## 🔮 Future Improvements
 
-### 🎨 Frontend
-
-* Component-based architecture
-* State & effect management (`useState`, `useEffect`)
-* Context API & custom hooks
-* Routing (React Router)
-* API integration with Axios
-
-### ⚙️ Backend
-
-* RESTful API design (Express.js)
-* Database queries (PostgreSQL)
-* Middleware & authentication (JWT)
-* Password encryption (bcrypt)
-* Error handling & modular structure
-
-### ⚡ Advanced
-
-* Real-time updates via Socket.IO
-* Environment variable configuration
-* Axios interceptors for token handling
+* ✅ Add dark mode support
+* ✅ Task categories and due dates
+* ✅ Email notifications
+* ✅ Admin dashboard for team management
+* ✅ Drag-and-drop task organization
 
 ---
-## 📊 System Architecture (Visual)
 
-```mermaid
-flowchart LR
-A[React Frontend] -->|Axios| B[Express API]
-B --> C[(PostgreSQL Database)]
-B --> D[Socket.IO Server]
-D --> A
-```
+## 🧑‍💻 Author
 
-**👨‍💻 Author:** [Abdullah Shakeel](https://github.com/abdu1lah26)
-⭐ If you like this project, consider giving it a **star** on GitHub!
+**Abdullah Shakeel**
+🎓 B.Tech CSE | MERN Stack Developer | Passionate about Building & Learning
+🔗 [LinkedIn](https://www.linkedin.com/in/) | [GitHub](https://github.com/abdu1lah26)
+
+---
