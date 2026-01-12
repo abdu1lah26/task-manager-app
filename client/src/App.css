@@ -605,6 +605,34 @@ body {
   transition: all 0.1s ease;
 }
 
+/* Demo Button on Home Page */
+.btn-demo-hero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 2rem;
+  font-size: 1.1rem;
+  font-weight: 600;
+  border: 2px solid #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-demo-hero:hover {
+  background: #10b981;
+  color: white;
+  transform: translateY(-5px) scale(1.02);
+  box-shadow: 0 15px 35px rgba(16, 185, 129, 0.3);
+}
+
+.btn-demo-hero:active {
+  transform: translateY(-2px) scale(0.98);
+}
+
 .features-section {
   max-width: 1200px;
   margin: 6rem auto;

@@ -4,6 +4,14 @@ import api from "../utils/api";
 import TaskBoard from "../components/tasks/TaskBoard";
 import { useSocket } from "../hooks/useSocket";
 import ConnectionStatus from "../components/common/ConnectionStatus";
+import {
+  isDemoMode,
+  getDemoProject,
+  getDemoTasks,
+  createDemoTask,
+  updateDemoTask,
+  deleteDemoTask,
+} from "../utils/demoData";
 
 const ProjectDetail = () => {
   const { id } = useParams();
@@ -43,6 +51,17 @@ const ProjectDetail = () => {
   }, [id]);
 
   const fetchProject = async () => {
+    // Demo mode
+    if (isDemoMode()) {
+      const demoProject = getDemoProject(id);
+      if (demoProject) {
+        setProject(demoProject);
+        setLoading(false);
+      } else {
+        navigate("/projects");
+      }
+      return;
+    }
     try {
       const response = await api.get(`/projects/${id}`);
       setProject(response.data.project);
@@ -54,6 +73,11 @@ const ProjectDetail = () => {
   };
 
   const fetchTasks = async () => {
+    // Demo mode
+    if (isDemoMode()) {
+      setTasks(getDemoTasks(id));
+      return;
+    }
     try {
       const response = await api.get(`/tasks/project/${id}`);
       setTasks(response.data.tasks);
@@ -114,6 +138,22 @@ const ProjectDetail = () => {
 
     setCreating(true);
 
+    // Demo mode
+    if (isDemoMode()) {
+      const newTask = createDemoTask(id, taskForm);
+      setTasks([newTask, ...tasks]);
+      setShowCreateTask(false);
+      setTaskForm({
+        title: "",
+        description: "",
+        priority: "medium",
+        assignedTo: "",
+        dueDate: "",
+      });
+      setCreating(false);
+      return;
+    }
+
     try {
       const response = await api.post(`/tasks/project/${id}`, taskForm);
       setTasks([response.data.task, ...tasks]);
@@ -136,6 +176,12 @@ const ProjectDetail = () => {
   };
 
   const handleTaskUpdate = async (taskId, updates) => {
+    // Demo mode
+    if (isDemoMode()) {
+      const updated = updateDemoTask(taskId, updates);
+      if (updated) setTasks(tasks.map((t) => (t.id === taskId ? updated : t)));
+      return;
+    }
     try {
       const response = await api.put(`/tasks/${taskId}`, updates);
       setTasks(tasks.map((t) => (t.id === taskId ? response.data.task : t)));
@@ -147,6 +193,12 @@ const ProjectDetail = () => {
   };
 
   const handleTaskDelete = async (taskId) => {
+    // Demo mode
+    if (isDemoMode()) {
+      deleteDemoTask(taskId);
+      setTasks(tasks.filter((t) => t.id !== taskId));
+      return;
+    }
     try {
       await api.delete(`/tasks/${taskId}`);
       setTasks(tasks.filter((t) => t.id !== taskId));

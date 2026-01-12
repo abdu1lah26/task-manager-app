@@ -12,6 +12,15 @@ export const AuthProvider = ({ children }) => {
     const checkAuth = async () => {
       const token = localStorage.getItem("token");
       const savedUser = localStorage.getItem("user");
+      const isDemo = localStorage.getItem("isDemo");
+
+      // Demo mode - skip API call
+      if (isDemo === "true" && savedUser) {
+        setUser(JSON.parse(savedUser));
+        setIsAuthenticated(true);
+        setLoading(false);
+        return;
+      }
 
       if (token && savedUser) {
         try {
@@ -76,8 +85,26 @@ export const AuthProvider = ({ children }) => {
   const logout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("user");
+    localStorage.removeItem("isDemo");
     setUser(null);
     setIsAuthenticated(false);
+  };
+
+  // Demo login - works without database!
+  const demoLogin = () => {
+    const demoUser = {
+      id: "demo-user",
+      username: "demo_user",
+      email: "demo@example.com",
+      fullName: "Demo User",
+      role: "user",
+    };
+    localStorage.setItem("token", "demo-token");
+    localStorage.setItem("user", JSON.stringify(demoUser));
+    localStorage.setItem("isDemo", "true");
+    setUser(demoUser);
+    setIsAuthenticated(true);
+    return { success: true };
   };
 
   const value = {
@@ -87,6 +114,7 @@ export const AuthProvider = ({ children }) => {
     register,
     login,
     logout,
+    demoLogin,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

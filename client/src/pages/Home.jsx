@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
 
 const Home = () => {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, demoLogin } = useAuth();
+  const navigate = useNavigate();
 
   return (
     <div className="home-container">
@@ -74,6 +75,15 @@ const Home = () => {
                   <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3" />
                 </svg>
               </Link>
+              <button
+                onClick={() => {
+                  demoLogin();
+                  navigate("/dashboard");
+                }}
+                className="btn-demo-hero"
+              >
+                <span>Try Demo</span>
+              </button>
             </>
           )}
         </div>

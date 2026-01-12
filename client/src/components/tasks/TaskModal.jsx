@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import api from "../../utils/api";
 import { useSocket } from "../../hooks/useSocket";
+import { isDemoMode } from "../../utils/demoData";
 
 const TaskModal = ({
   task,
@@ -49,6 +50,11 @@ const TaskModal = ({
   }, [socket, task.id]);
 
   const fetchTaskDetails = async () => {
+    // Demo mode - skip API call
+    if (isDemoMode()) {
+      setComments([]);
+      return;
+    }
     try {
       const response = await api.get(`/tasks/${task.id}`);
       setComments(response.data.task.comments || []);
@@ -80,6 +86,20 @@ const TaskModal = ({
     e.preventDefault();
     if (!newComment.trim()) return;
 
+    // Demo mode - add comment locally
+    if (isDemoMode()) {
+      const demoComment = {
+        id: `demo-c-${Date.now()}`,
+        content: newComment,
+        username: "demo_user",
+        full_name: "Demo User",
+        created_at: new Date().toISOString(),
+      };
+      setComments([...comments, demoComment]);
+      setNewComment("");
+      return;
+    }
+
     try {
       const response = await api.post(`/tasks/${task.id}/comments`, {
         content: newComment,
@@ -94,6 +114,12 @@ const TaskModal = ({
 
   const handleDeleteComment = async (commentId) => {
     if (!window.confirm("Delete this comment?")) return;
+
+    // Demo mode - delete locally
+    if (isDemoMode()) {
+      setComments(comments.filter((c) => c.id !== commentId));
+      return;
+    }
 
     try {
       await api.delete(`/tasks/comments/${commentId}`);

@@ -2,6 +2,12 @@ import { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import api from "../utils/api";
 import { useAuth } from "../hooks/useAuth";
+import {
+  isDemoMode,
+  getDemoProjects,
+  createDemoProject,
+  deleteDemoProject,
+} from "../utils/demoData";
 
 const Projects = () => {
   const navigate = useNavigate();
@@ -27,6 +33,12 @@ const Projects = () => {
   }, []);
 
   const fetchProjects = async () => {
+    // Demo mode - use local data
+    if (isDemoMode()) {
+      setProjects(getDemoProjects());
+      setLoading(false);
+      return;
+    }
     try {
       const response = await api.get("/projects");
       setProjects(response.data.projects);
@@ -48,6 +60,16 @@ const Projects = () => {
 
     setCreating(true);
 
+    // Demo mode
+    if (isDemoMode()) {
+      const newProject = createDemoProject(formData);
+      setProjects([newProject, ...projects]);
+      setShowModal(false);
+      setFormData({ name: "", description: "" });
+      setCreating(false);
+      return;
+    }
+
     try {
       const response = await api.post("/projects", formData);
       setProjects([response.data.project, ...projects]);
@@ -64,6 +86,13 @@ const Projects = () => {
 
   const handleDelete = async (projectId) => {
     if (!window.confirm("Are you sure you want to delete this project?")) {
+      return;
+    }
+
+    // Demo mode
+    if (isDemoMode()) {
+      deleteDemoProject(projectId);
+      setProjects(projects.filter((p) => p.id !== projectId));
       return;
     }
 
